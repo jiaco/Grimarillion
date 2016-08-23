@@ -1,0 +1,245 @@
+work.dir = "C:/Users/jiaco/Documents/Grimarillion_sources";
+src.subdir = "individual";
+src.dir = sprintf( "%s/%s", work.dir, src.subdir );
+setwd( work.dir );
+
+mod.list = list.files( src.dir );
+
+shh = function( expr )
+{
+	suppressWarnings( expr );
+}
+I = function( x )
+{
+	shh( as.numeric( x ) );
+}
+
+unarc = function( path )
+{
+	arcs = list.files( path, "*.arc", recursive = TRUE );
+	arcs = sprintf( "%s/%s", path, arcs );
+	names( arcs ) = sub( "[.].*", "", basename( arcs ) );
+	cmd = sprintf( "%s/archivetool.exe", work.dir );
+	for( arc.name in names( arcs ) ) {
+		arc.path = sprintf( "%s/%s", path, arc.name );
+		params = c( arcs[ arc.name ], "-extract", path );
+		system2( cmd, params );
+	}
+}
+unarz = function( path )
+{
+	cmd = sprintf( "%s/archivetool.exe", work.dir );
+	arz.path = list.files( path, "*.arz" )[1];
+	arz.path = sprintf( "%s/%s", path, arz.path );
+	params = c( arz.path, "-database", path );
+	system2( cmd, params );
+}
+unpack = function( path )
+{
+	unarc( sprintf( "%s/resources", path ) );
+	unarz( sprintf( "%s/database", path ) );
+}
+# unpack stasher
+
+
+unpack( sprintf( "%s/Stasher", src.dir ) );
+unpack( sprintf( "%s/GoodLooking", src.dir ) );
+unpack( sprintf( "%s/GrimQuest", src.dir ) );
+
+# now find conflicts
+
+mod.dirs = sprintf( "%s/%s", src.dir, mod.list );
+names( mod.dirs ) = mod.list;
+
+
+
+findDbrs = function( path )
+{
+	sub( "^database/", "", list.files( path, "*[.]dbr$", recursive=TRUE ));
+}
+parseFields = function( line )
+{
+	strsplit( line, "," )[[1]];
+}
+getName = function( tok )
+{
+	tok[1];
+}
+getValue = function( tok )
+{
+	tok[2];
+}
+readDbr = function( path )
+{
+	lines = shh( readLines( path ) );
+	toks = lapply( lines, parseFields );
+	rv = unlist( lapply( toks, getValue ) );
+	names( rv ) = unlist( lapply( toks, getName ) );
+	return( rv );
+}
+writeDbr = function( dbr, path )
+{
+	text = sprintf( "%s,%s,", names( dbr ), dbr );
+	base.path = dirname( path );
+	if( !dir.exists( base.path ) ) {
+		dir.create( base.path, recursive = TRUE );
+	}
+	writeLines( text, path );
+}
+countPerDir = function( dbrlist )
+{
+	r = rle( dirname( dbrlist ) );
+	cbind( r$values, r$lengths );
+}
+
+dbrs = lapply( mod.dirs, findDbrs );
+
+conflict = list();
+master="Cornucopia003";
+for( slave in c( "GrimQuest", "Grimmest", "Stasher", "GoodLooking" ) ) {
+	conflict[[ slave ]] =
+	 dbrs[[master]][ dbrs[[master]]%in%dbrs[[slave]] ];
+}
+cc = lapply( conflict, dirname );
+
+deal = countPerDir( conflict[[ "GrimQuest" ]] );
+
+# Corn + Grimmer (-gameengine) + Stasher + GoodLooking is no-conflict
+# need to work on how to get GrimQuest and Corn to merge nicely
+
+# fieldCheck
+# run this on cc[[1]] which is GrimQuest/Corn conflicts
+fieldCheck = function( dbr, m.path, s.path )
+{
+	m.dbr = readDbr( sprintf( "%s/database/%s", m.path, dbr ) );
+	s.dbr = readDbr( sprintf( "%s/database/%s", s.path, dbr ) );
+	rv = c();
+	nrv = c();
+	for( fld in names( m.dbr ) ) {
+		if( fld %in% names( s.dbr ) ) {
+			if( m.dbr[ fld ] == s.dbr[ fld ] ) {
+				next;
+			}
+			mn = I( m.dbr[fld] );
+			sn = I( s.dbr[fld] );
+			if( !is.na( mn ) && !is.na( sn ) && mn == sn ) {
+				next;
+			}
+			m.s = sprintf( "%s vs %s",
+				 m.dbr[fld], s.dbr[fld] );
+			rv = c( rv, m.s );
+			nrv = c( nrv, fld );
+		}
+	}
+	names( rv ) = nrv;
+	return( rv );
+}
+isSame = function( m.value, s.value )
+{
+	if( m.value == s.value ) {
+		return( TRUE );
+	}
+	m.i = I( m.value );
+	s.i = I( s.value );
+	if( !is.na( m.i ) && !is.na( s.i ) && m.i == s.i ) {
+		return( TRUE );
+	}
+	m.tok = strsplit( m.value, ";" )[[1]];
+	s.tok = strsplit( s.value, ";" )[[1]];
+	if( length( m.tok ) != length( s.tok ) ) {
+		return( FALSE );
+	}
+	rv = TRUE;
+	for( i in 1:(length(m.tok)) ) {
+		if( m.tok[i] != s.tok[i] ) {
+			rv = FALSE;
+			m.i = I( m.tok[i] );
+			s.i = I( s.tok[i] );
+			if( !is.na( m.i ) && !is.na( s.i ) && m.i == s.i ) {
+				rv  = TRUE;
+			}
+		}
+		if( !rv ) {
+			break;
+		}
+	}
+	return( rv );
+}
+
+master="Cornucopia003";
+slave = "GrimQuest";
+deal = conflict[[slave]];
+names( deal ) = deal;
+#fld.deal = lapply( deal, fieldCheck, mod.dirs[master], mod.dirs[slave] );
+
+master="Cornucopia003";
+o.mods = c( "GrimQuest", "Grimmest", "GoodLooking", "Stasher" );
+out.mod = "Grimarillion";
+
+log = c();
+m.dbrNames = dbrs[[ master ]];
+for( m.dbrName in m.dbrNames ) {
+	m.dbr = readDbr( sprintf( "%s/database/%s", mod.dirs[ master ], m.dbrName ) );
+	for( o.mod in o.mods ) {
+		if( m.dbrName %in% dbrs[[ o.mod ]] ) {
+			s.dbr = readDbr( sprintf( "%s/database/%s",
+			 mod.dirs[ o.mod ], m.dbrName ) );
+
+			for( fld in names( m.dbr ) ) {
+				if( !( fld %in% names( s.dbr ) ) ) {
+					next;
+				}
+				if( isSame( m.dbr[ fld ], s.dbr[ fld ] ) ) {
+					next;
+				}
+				if( nchar( m.dbr[fld] ) == 0 ) {
+					m.dbr[fld] = s.dbr[fld ];
+					next;
+				}
+				log.s = paste( c( m.dbrName, fld,
+					 m.dbr[fld], s.dbr[fld] ), collapse=";" );
+				log = c( log, log.s );
+			}
+			# be sure to check s.dbr for flds missing from m.dbr
+			s.flds = names( s.dbr )[
+			 !( names( s.dbr ) %in% names( m.dbr ) ) ];
+			for( fld in s.flds ) {
+				rname = names( m.dbr );
+				m.dbr = c( m.dbr, s.dbr[ fld ] );
+				names( m.dbr ) = c( rname, fld );
+			}
+		}
+	}
+	out.path = sprintf( "%s/%s/database/%s",  work.dir, out.mod, m.dbrName );
+	writeDbr( m.dbr, out.path );
+}
+# and now, all that remains is to go through each mod
+# if the output path does not exist, put that dbr in place
+n.added = 0;
+for( o.mod in o.mods ) {
+	s.dbrNames = dbrs[[ o.mod ]];
+	for( s.dbrName in s.dbrNames ) {
+		out.path = sprintf( "%s/%s/database/%s",  work.dir, out.mod, s.dbrName );
+		if( !file.exists( out.path ) ) {
+			s.dbr = readDbr( sprintf( "%s/database/%s", mod.dirs[ o.mod ],
+				s.dbrName ) );
+			writeDbr( s.dbr, out.path );
+			n.added = n.added + 1;
+		}
+	}
+}
+
+# and manually keep GrimQuest records from here:
+# [1,] "records/creatures/pc"                          "32"  
+# [9,] "records/skills/playerclass01"                  "15"  
+#[10,] "records/skills/playerclass02"                  "9"   
+#[11,] "records/skills/playerclass03"                  "14"  
+#[12,] "records/skills/playerclass04"                  "9"   
+#[13,] "records/skills/playerclass05"                  "6"   
+#[14,] "records/skills/playerclass06"                  "14"  
+#[15,] "records/ui/skills/class01"                     "2"   
+#? "records/game"                                  "33"  
+# and weapons shows that we should keep s.dbr-fld when m.dbr-fld is empty
+# [7,] "records/items/loottables/weapons"              "1410"
+# materia shows that isSame is borked, need to check arrays
+# [8,] "records/items/materia"                         "291" 
