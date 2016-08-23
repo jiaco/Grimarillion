@@ -1,0 +1,20 @@
+This thread is WIP.
+
+adoomgod, ASYLUM101, Ceno and jiaco have started a syndicate of GD modders that want to merge their mods into a single mod, called Grimarillion.
+
+Before we release anything, we will have in place a completely automated pipeline to perform all necessary merging tasks and ensure that everything works. This project hopes to fill the 30 mastery slots available as well as combine any and all mods that can be merged and retain their independent character as well as contribute to the complete Grimarillion experience. For now, this excludes any map mods. With the eventual release of a vanilla replacement version, the Crucible and map mods will be able to be played in the context of Grimarillion.
+
+This syndicate is open to any modder that desires to participate. Participation indicates that you have a mod that is compatible with the merging process and are willing to keep your mod up-to-date.
+
+While Grimarillion is a collection, the goal is to preserve each mod in its entirety as much as possible. But by collecting them all together, we hope to aid the players in keeping things simple and maintaining compatibility for save data from release to release.
+
+To start, I made the GitHub just now. Send me your GitHub user name for invite. I will push the R script and this text to Git now. Feel free to modify this post on Git. While I am trying to organize this, I do not want to be the owner. So assert yourself and contribute as this is a cooperative.
+
+[url]https://github.com/jiaco/Grimarillion[/url]
+
+Version 0.0 is Cornucopia + GrimQuest + Grimmest + Stasher + GoodLooking. I just 7zipped it and sent to mega in case you want to see. There are issues still, but this was done with sources for Corn and Grimmest, arctool.exe extractions for Stasher and GoodLooking, build in AssetManager and then manual collection of arcs from non-source downloads. Pretty sure all the missing elements are because AssetManager built the mod without the assets and thus even though all the files are in place, they are not properly connected.
+[url]https://mega.nz/#!8RAg0Kga!tJ4xnYgP0CJYmgzNoKNEeky6mszt9shFfgaA6LQrFHo[/url]
+
+My idea is to open the thread, and ask modders to join the club with their mod. If the modder does not show an interest, then screw it, that mod will not be integrated. This has to be a completely voluntary process and the modder has to participate in the project. Finally, each modder should be considered an equal partner in Grimarillion.
+
+(note to self, contact Stasher and GoodLooking modders as their stuff has basically been stolen to test the merging process.
