@@ -1,0 +1,2 @@
+1,records/skills/playerclass01,Soldier
+30,records/skills/dream,Dream
