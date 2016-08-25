@@ -1,0 +1,15 @@
+Package: GDmodR
+Title: Grim Dawn modding functionality for R
+Version: 1.0
+Authors@R: person( "Jason", "Iacovoni", email = "jiacov@gmail.com",
+	 role = c("aut", "cre") )
+Description: Enables a myriad of Grim Dawn modding tasks to be performed in R.
+	 Read and write database records, provides wrappers for arctool.exe,
+	 functions to check validity of all dbr references,
+	 ease the process of mod-merging (including mastery mod collections),
+	 and (in the near future),
+	create graph representations of connectivity between database records.
+Depends: R (>= 3.3.1)
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
